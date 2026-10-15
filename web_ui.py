@@ -1191,4 +1191,4 @@ if __name__ == "__main__":
     if not a.no_browser:
         threading.Timer(1.0, lambda: webbrowser.open(url)).start()
 
-    app.run(host="0.0.0.0", port=a.port, debug=False, threaded=True)
+    app.run(host="127.0.0.1", port=a.port, debug=False, threaded=True)
