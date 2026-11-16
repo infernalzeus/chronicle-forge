@@ -49,6 +49,8 @@ def _fetch_page(title: str) -> dict:
     pages = resp.json()["query"]["pages"]
     page  = next(iter(pages.values()))
     extract = page.get("extract", "")
+    if "missing" in page or not extract.strip():
+        raise ValueError(f"No usable article text for {title!r}")
     if len(extract) > MAX_EXTRACT_CHARS:
         extract = extract[:MAX_EXTRACT_CHARS] + "…"
     return {
@@ -73,12 +75,10 @@ def fetch_research(topic: str, verbose: bool = False) -> dict:
     try:
         results = _search_wikipedia(topic)
     except Exception as exc:
-        print(f"  Warning: Wikipedia search failed: {exc}")
-        return {"summary": "", "sources": []}
+        raise RuntimeError("Research search failed; refusing to generate an unsourced story.") from exc
 
     if not results:
-        print("  No Wikipedia results — proceeding without research.")
-        return {"summary": "", "sources": []}
+        raise RuntimeError("No research results; refine the topic before generating a story.")
 
     pages = []
     for r in results:
@@ -91,7 +91,7 @@ def fetch_research(topic: str, verbose: bool = False) -> dict:
             print(f"  Warning: failed to fetch {r['title']!r}: {exc}")
 
     if not pages:
-        return {"summary": "", "sources": []}
+        raise RuntimeError("No usable research pages; retry before generating a story.")
 
     summary_parts = []
     sources       = []

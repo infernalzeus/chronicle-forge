@@ -1,0 +1,2 @@
+# Optional agent tracing and guardrails.
+staso==0.5.26

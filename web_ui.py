@@ -28,6 +28,7 @@ import subprocess
 import sys
 import threading
 import time
+import requests
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -151,6 +152,8 @@ def _run(params: dict):
     global _proc
 
     cmd = [*_PY_CMD, "main.py"]
+    if params.get("model"):
+        cmd += ["--model", params["model"]]
     if params.get("resume"):
         cmd.append("--resume")
     else:
@@ -229,6 +232,34 @@ def _run(params: dict):
 
 # ── Routes ─────────────────────────────────────────────────────────────────────
 
+def _available_models():
+    base = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434").rstrip("/")
+    response = requests.get(f"{base}/api/tags", timeout=5)
+    response.raise_for_status()
+    models = []
+    for item in response.json().get("models", []):
+        name = item.get("name") or item.get("model")
+        if not name:
+            continue
+        details = requests.post(f"{base}/api/show", json={"model": name}, timeout=5)
+        details.raise_for_status()
+        info = details.json()
+        # Embedding-only and other non-text models cannot write narration.
+        if "completion" not in info.get("capabilities", []):
+            continue
+        cloud = bool(info.get("remote_host") or item.get("remote_host") or name.endswith(":cloud"))
+        models.append({"name": name, "cloud": cloud})
+    return sorted(models, key=lambda model: (model["cloud"], model["name"]))
+
+
+@app.route("/api/models")
+def api_models():
+    try:
+        return jsonify({"models": _available_models(),
+                        "configured": os.getenv("OLLAMA_MODEL", "gemma4:e4b")})
+    except (requests.RequestException, ValueError):
+        return jsonify({"error": "Could not load models. Check that Ollama is running, then refresh."}), 503
+
 @app.route("/api/start", methods=["POST"])
 def api_start():
     if _get_state()["running"]:
@@ -236,6 +267,13 @@ def api_start():
     params = request.json or {}
     if not params.get("resume") and not params.get("topic", "").strip():
         return jsonify({"error": "topic is required"}), 400
+    if "model" in params:
+        try:
+            available = {model["name"] for model in _available_models()}
+        except (requests.RequestException, ValueError):
+            return jsonify({"error": "Cannot verify selected model. Check Ollama and refresh models."}), 503
+        if not isinstance(params["model"], str) or params["model"] not in available:
+            return jsonify({"error": "Choose an available text model and try again."}), 400
     t = threading.Thread(target=_run, args=(params,), daemon=True)
     t.start()
     return jsonify({"status": "started"})
@@ -618,6 +656,13 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
     </div>
 
     <div class="form-group">
+      <label class="form-label" for="model">Text model</label>
+      <select id="model" onchange="updateModelHint()"><option value="">Loading models…</option></select>
+      <button type="button" onclick="loadModels()">Refresh models</button>
+      <div id="model-hint" role="status" style="font-size:12px;margin-top:6px"></div>
+    </div>
+
+    <div class="form-group">
       <label class="form-label">TTS Engine</label>
       <div class="radio-group" id="tts-group">
         <div class="radio-opt active" data-val="edge" onclick="pickTTS(this)">
@@ -815,6 +860,47 @@ setInterval(checkServices, 15000);
 // pagehide fires on close, back-nav, and tab switch-away (more reliable than beforeunload).
 window.addEventListener('pagehide',     () => { navigator.sendBeacon('/api/close'); });
 window.addEventListener('beforeunload', () => { navigator.sendBeacon('/api/close'); });
+
+// ── Text model selection ────────────────────────────────────────────────────
+let textModels = [];
+function updateModelHint() {
+  const selected = textModels.find(m => m.name === document.getElementById('model').value);
+  document.getElementById('model-hint').textContent = !selected
+    ? 'Select a text model before starting.'
+    : selected.cloud ? 'Cloud · requires internet and Ollama credits or a paid allowance.'
+    : 'Local · uses your hardware, with no Ollama cloud charge. Other pipeline steps may use online services.';
+}
+async function loadModels() {
+  const select = document.getElementById('model');
+  const previous = select.value;
+  select.disabled = true;
+  document.getElementById('model-hint').textContent = 'Loading available text models…';
+  try {
+    const response = await fetch('/api/models');
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Could not load models.');
+    textModels = data.models;
+    select.replaceChildren();
+    if (!textModels.length) throw new Error('No text models found. Install a text model in Ollama, then refresh.');
+    for (const model of textModels) {
+      const option = document.createElement('option');
+      option.value = model.name;
+      option.textContent = `${model.name} · ${model.cloud ? 'Cloud' : 'Local'}`;
+      select.appendChild(option);
+    }
+    let remembered = previous;
+    try { remembered = remembered || localStorage.getItem('cf-text-model'); } catch {}
+    // Prefer local inference on first use; keep explicit user choices thereafter.
+    select.value = textModels.find(m => m.name === remembered)?.name
+      || textModels.find(m => !m.cloud && m.name === data.configured)?.name
+      || textModels.find(m => !m.cloud)?.name || textModels[0].name;
+    updateModelHint();
+  } catch (error) {
+    select.replaceChildren(new Option('Models unavailable', ''));
+    document.getElementById('model-hint').textContent = error.message;
+  } finally { select.disabled = false; }
+}
+loadModels();
 
 // ── Duration slider ─────────────────────────────────────────────────────────
 function updateDur() {
@@ -1100,6 +1186,11 @@ function connectSSE() {
 
 // ── Actions ──────────────────────────────────────────────────────────────────
 async function startPipeline() {
+  const model = document.getElementById('model').value;
+  if (!model || document.getElementById('model').disabled) {
+    addLine('[CF ERROR] Load and select a text model first.');
+    return;
+  }
   const topic = document.getElementById('topic').value.trim();
   if (!resumeActive && !topic) {
     const el = document.getElementById('topic');
@@ -1121,6 +1212,7 @@ async function startPipeline() {
 
   verboseMode = document.getElementById('verbose').checked;
   const params = {
+    model,
     topic,
     duration: +document.getElementById('dur').value,
     tts,
@@ -1136,6 +1228,7 @@ async function startPipeline() {
   });
   const data = await res.json();
   if (data.error) { addLine('[CF ERROR] ' + data.error); return; }
+  try { localStorage.setItem('cf-text-model', model); } catch {}
 
   setRunning(true);
   connectSSE();

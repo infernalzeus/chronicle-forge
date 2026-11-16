@@ -1,0 +1,6 @@
+Video encoding uses unmodified @ffmpeg/ffmpeg 0.12.15 (MIT wrapper) and @ffmpeg/core 0.12.10 (GPL-2.0-or-later, single-thread software FFmpeg, including libx264). This is not an AI model.
+See WRAPPER-LICENSE.txt and GPL-2.0.txt. The original wasm file is split byte-for-byte into core-part-0.wasm through core-part-4.wasm solely to fit the hosting file-size limit; concatenate in that order to reconstruct the original binary.
+Published distributions: https://registry.npmjs.org/@ffmpeg/ffmpeg/-/ffmpeg-0.12.15.tgz and https://registry.npmjs.org/@ffmpeg/core/-/core-0.12.10.tgz
+Corresponding source and build recipes: https://github.com/ffmpegwasm/ffmpeg.wasm (core v0.12.10 release/build); https://github.com/ffmpegwasm/ffmpeg.wasm/tree/main/build
+Upstream FFmpeg source: https://ffmpeg.org/download.html
+DejaVu Sans is redistributed unmodified under the license in LICENSE_DEJAVU.txt; source: https://dejavu-fonts.github.io/

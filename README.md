@@ -3,6 +3,16 @@
 A local-AI powered YouTube story video generation pipeline. 
 Give it a topic, get a fully narrated, image-synced MP4 — script, voiceover, visuals, and YouTube metadata included.
 
+## Anna app — October 2026
+
+A private **v0.2.1 studio candidate** is ready for user review: custom duration/image count, detailed/stick-figure controls, live previews and percentages, still whole-image export by default, clearer optional downloads and content-free local diagnostics. **46 tests pass**; a 30-second three-scene browser framing test and existing real-image/voice export were verified with no new AI calls. The submitted Anna review remains pinned to v0.1.1; this newer candidate is not submitted or public.
+
+The [Anna app](anna-app/README.md) provides the full research → narration review → hosted illustrations → hosted speech → captioned MP4 workflow. It uses Anna-hosted AI services and a browser software video encoder, with no Ollama or local AI model dependency. Downloads include source notes, subtitles, a thumbnail and a resumable media project. These project files are separate from the original local pipeline checkpoints.
+
+The local pipeline now refuses narration generation without research and instructs the model to avoid unsupported details and invented motives. These are safeguards, not a factual accuracy guarantee. Existing saved narrations are reused by `--resume`; these changes do not repair old checkpoints. The saved Blockbuster/Netflix run requires human fact review and includes an unrelated research article. Preserve or archive old output before starting a fresh run.
+
+Run safety checks with `python -B -m unittest discover -s tests -v` and `node --test anna-app/tests/*.test.mjs`. All 35 automated tests passed. Live Anna research, script/audit, one image and one four-word speech clip were exercised. The final 2.104-second video was exported and decoded successfully at 720p and 1080p; two-scene concatenation and project recovery were also checked without further generation. After review feedback, app 772 version **0.1.1** (version ID **1912**, revision r11) was resubmitted and is **pending Anna review** as of 3 November 2026. It adds recoverable image jobs, visible generation progress and clearer output labels, plus expanded listing details and screenshots. A new 2.104-second 720p hosted image/speech video was exported, decoded and inspected; no local AI model was used. Long videos have not been acceptance-tested, to respect the user's low-cost test constraint.
+
 ---
 
 ## What It Does
@@ -83,16 +93,16 @@ Ollama runs the language model that writes the narration, scene prompts, and You
 
 ```bash
 # After installing Ollama, pull the model:
-ollama pull nemotron-3-super:cloud
+ollama pull gemma4:e4b
 
 # Verify it's running:
 ollama serve
 ```
 
 - Ollama must be **running** (`ollama serve`) before starting the pipeline
-- Default model: `nemotron-3-super:cloud` — a cloud-inference thinking model
+- Default model: `gemma4:e4b` — runs on this PC, nothing is sent over the internet
 - Any Ollama-compatible model works; set `OLLAMA_MODEL` in `.env` to change it
-- The cloud model has a thinking phase (10–30 s of silence before tokens appear) — this is normal
+- The first call loads the model into the graphics card, so it can take a few seconds
 
 #### SDXL Model — required (image generation)
 Chronicle Forge needs an SDXL base model in **diffusers format** (a folder, not a single `.safetensors` file).
@@ -130,6 +140,52 @@ python --version   # must say Python 3.11.x
 
 ## Requirements
 
+### Choosing an Ollama text model
+
+The local web UI has a **Text model** selector and **Refresh models** button.
+It discovers text-generation models from your configured Ollama service,
+labels local versus cloud execution, and prefers a local model on first use.
+Your last submitted selection is remembered in that browser. The selected
+model applies to remaining script, metadata, and image-prompt generation for
+that run; resuming does not regenerate already saved text. It does not change
+the speech or image-generation model. This selector belongs to the Python
+web UI, separate from the Anna-hosted app.
+
+For command-line use: `python main.py --model gemma4:e2b` (plus your normal
+options). Without `--model`, the CLI still uses `OLLAMA_MODEL` from the
+environment or `.env`. Local inference has no Ollama cloud charge; cloud
+models require credits or an included paid allowance. On 13 November 2026,
+a minimal `nemotron-3-super:cloud` probe returned HTTP 402 (credits required).
+
+### Isolated Python environment (Windows)
+
+Use Python 3.11 and install dependencies inside `.venv`:
+
+```powershell
+python3.11 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt -r requirements-web.txt -c constraints.txt
+.\.venv\Scripts\python.exe web_ui.py
+```
+
+If `python3.11` is unavailable, use the full path to a Python 3.11 executable
+for the first command. Once `.venv` exists, always use its Python as shown;
+activation is optional. The environment is excluded from version control.
+`constraints.txt` keeps the installed libraries compatible with the current
+MoviePy and DirectML code. Ollama and the SDXL model remain separate prerequisites.
+
+### Optional — Staso agent tracing
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements-staso.txt -c constraints.txt
+.\.venv\Scripts\staso.exe setup --target codex --scope project --agent-name chronicle-forge --no-guard
+.\.venv\Scripts\staso.exe status
+```
+
+Create an account at https://staso.ai/ and supply your Staso API key in the
+interactive setup. This connects coding-agent hooks; installing the SDK alone
+does not trace the Python pipeline. Configure Guard policies later if desired.
+Review capture options during setup before sending traces.
+
 ### Python packages
 ```bash
 pip install -r requirements.txt
@@ -159,7 +215,7 @@ pip install -r requirements.txt
 **2. Create `.env`** (copy from `.env.example`)
 ```env
 OLLAMA_BASE_URL=http://localhost:11434
-OLLAMA_MODEL=nemotron-3-super:cloud
+OLLAMA_MODEL=gemma4:e4b
 
 # Path to your SDXL model in diffusers format
 MODEL_PATH=Z:\Programs\Invoke\models\your-model-id
@@ -175,7 +231,7 @@ TTS_VOICE=en-US-AndrewMultilingualNeural
 **3. Start Ollama**
 ```bash
 ollama serve
-ollama pull nemotron-3-super:cloud
+ollama pull gemma4:e4b
 ```
 
 ---
@@ -471,7 +527,7 @@ Full documentary feel with multiple acts:
 
 ## How the Narration Works
 
-The script LLM (`nemotron-3-super:cloud`) writes emotionally-driven narration — not a documentary list of facts. It follows a three-act structure:
+The script LLM (`gemma4:e4b`) writes emotionally-driven narration — not a documentary list of facts. It follows a three-act structure:
 
 1. **Cold open** — drop into a vivid scene with no context ("He held a vial so unstable one wrong move would kill everyone in the building.")
 2. **Rising stakes** — specific details, cause-and-effect, tension
@@ -549,3 +605,6 @@ del output\narration.wav
 python main.py --resume
 ```
 The pipeline uses TTS word-boundary timestamps for image sync — mismatched audio from a different engine/run will desync.
+
+
+Review status update — 3 November 2026: latest working revision r16 was cut as v0.2.2 (1937) and submitted. Anna confirmed pending_review pinned to v0.2.2, replacing v0.1.1. Store metadata and studio screenshots synchronized. Final real multi-scene test remains quota-blocked; this limitation was included in the submitted changelog.

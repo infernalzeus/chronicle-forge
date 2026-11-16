@@ -88,7 +88,7 @@ Uses a descriptive `User-Agent` header (`chronicle-forge/1.0 …`) as required b
 |---|---|
 | **Input** | `topic`, `target_seconds`, `research_summary` |
 | **Output** | `narration: str`, `scenes: [{text_segment, prompt}]`, `narration_ssml: str` |
-| **Model** | `nemotron-3-super:cloud` (Ollama) |
+| **Model** | `gemma4:e4b` (Ollama, on this PC) |
 | **Scene count** | LLM-decided, bounded by `MIN_SCENE_DURATION=4s` / `MAX_SCENE_DURATION=12s` / `MAX_SCENES=80` |
 
 **Three-pass design.** Each pass is checkpointed separately so a failure in Pass 2 or 3 doesn't lose the narration (which takes the longest to generate).
@@ -210,7 +210,7 @@ Wall-clock timeout: 300s. XML is validated via `ET.fromstring(f"<speak>{raw}</sp
 |---|---|
 | **Input** | `topic`, `narration` (preview), `sources` list |
 | **Output** | `{title: str, description: str, tags: [str]}` |
-| **Model** | `nemotron-3-super:cloud` (Ollama) |
+| **Model** | `gemma4:e4b` (Ollama, on this PC) |
 
 Three separate focused calls — one per output type — each with its own timeout and fallback. Originally a single combined prompt caused ~400s of thinking before producing anything.
 

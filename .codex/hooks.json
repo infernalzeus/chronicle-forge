@@ -1,0 +1,123 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "'N:\\Code\\git repositories\\My Repo\\chronicle-forge\\.venv\\Scripts\\python.exe' -m staso.codex"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "'N:\\Code\\git repositories\\My Repo\\chronicle-forge\\.venv\\Scripts\\python.exe' -m staso.codex"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "'N:\\Code\\git repositories\\My Repo\\chronicle-forge\\.venv\\Scripts\\python.exe' -m staso.codex"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "'N:\\Code\\git repositories\\My Repo\\chronicle-forge\\.venv\\Scripts\\python.exe' -m staso.codex"
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "'N:\\Code\\git repositories\\My Repo\\chronicle-forge\\.venv\\Scripts\\python.exe' -m staso.codex"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "'N:\\Code\\git repositories\\My Repo\\chronicle-forge\\.venv\\Scripts\\python.exe' -m staso.codex"
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "'N:\\Code\\git repositories\\My Repo\\chronicle-forge\\.venv\\Scripts\\python.exe' -m staso.codex"
+          }
+        ]
+      }
+    ],
+    "PostCompact": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "'N:\\Code\\git repositories\\My Repo\\chronicle-forge\\.venv\\Scripts\\python.exe' -m staso.codex"
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "'N:\\Code\\git repositories\\My Repo\\chronicle-forge\\.venv\\Scripts\\python.exe' -m staso.codex"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "'N:\\Code\\git repositories\\My Repo\\chronicle-forge\\.venv\\Scripts\\python.exe' -m staso.codex"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "'N:\\Code\\git repositories\\My Repo\\chronicle-forge\\.venv\\Scripts\\python.exe' -m staso.codex"
+          }
+        ]
+      }
+    ]
+  }
+}

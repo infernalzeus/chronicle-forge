@@ -1,2 +1,5 @@
 # Generated videos, scenes, narration
 output/
+.internal/
+.venv/
+__pycache__/

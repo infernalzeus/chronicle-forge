@@ -1,0 +1,7 @@
+# Compatibility bounds for the current local pipeline.
+# video_composer.py uses moviepy.editor, removed in MoviePy 2.
+moviepy<2
+# torch-directml's PyTorch 2.4 stack requires the NumPy 1 ABI.
+numpy<2
+# Keep the Transformers major version supported by this Diffusers stack.
+transformers<5

@@ -1,0 +1,80 @@
+{
+  "schema": 2,
+  "required_executas": [],
+  "system_prompt_addendum": "Open Chronicle Forge to research, review and create illustrated narrated documentary videos. AI calls use Anna-hosted models, never localhost or Ollama. Users approve their narration before generating images and speech; the browser encodes the finished MP4. Every draft needs human factual review; never describe model audits or generated illustrations as verified evidence.",
+  "tags": [
+    "chronicle-forge"
+  ],
+  "ui": {
+    "bundle": {
+      "format": "static-spa",
+      "entry": "index.html",
+      "external_origins": []
+    },
+    "views": [
+      {
+        "name": "main",
+        "title": "Chronicle Forge",
+        "default": true,
+        "default_size": {
+          "w": 1280,
+          "h": 850
+        },
+        "min_size": {
+          "w": 320,
+          "h": 240
+        }
+      }
+    ],
+    "host_api": {
+      "web": [
+        "search",
+        "fetch"
+      ],
+      "llm": [
+        "complete",
+        "catalog"
+      ],
+      "image": [
+        "generateAsync",
+        "getJob"
+      ],
+      "audio": [
+        "speak"
+      ],
+      "window": [
+        "set_title",
+        "ready"
+      ]
+    },
+    "csp_overrides": {
+      "connect-src": [
+        "https:",
+        "blob:"
+      ],
+      "img-src": [
+        "https:",
+        "blob:"
+      ],
+      "media-src": [
+        "https:",
+        "blob:"
+      ],
+      "script-src": [
+        "'self'",
+        "'wasm-unsafe-eval'"
+      ]
+    },
+    "browser_permissions": [
+      "autoplay"
+    ],
+    "state_merge": "last_writer_wins"
+  },
+  "dev": {
+    "fixtures": [
+      "fixtures/*.jsonl"
+    ],
+    "seed_storage": {},
+    "user_id": 1
+  }
+}

@@ -243,6 +243,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Chronicle Forge — AI story video generator"
     )
+    parser.add_argument("--model", help="Ollama text model for this run (overrides OLLAMA_MODEL)")
     parser.add_argument("--topic",    help="Story topic (e.g. 'ancient egypt')")
     parser.add_argument("--duration", type=int,
                         help="Target duration in seconds (e.g. --duration 420)")
@@ -262,6 +263,9 @@ def main() -> None:
     parser.add_argument("--resume",   action="store_true",
                         help=f"Resume pipeline from checkpoint at {DATA_PATH}")
     args = parser.parse_args()
+    if args.model:
+        # Set before generation modules import their environment configuration.
+        os.environ["OLLAMA_MODEL"] = args.model
 
     print("=== Chronicle Forge — AI Story Video Generator ===\n")
     os.makedirs("output/images", exist_ok=True)
